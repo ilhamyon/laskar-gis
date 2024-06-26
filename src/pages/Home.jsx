@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deauthUser, isAuthenticated } from "../utils/auth";
-import { Button, Dropdown, Form, Input, Menu, Upload, message } from "antd";
-import { sanityClient } from "../lib/sanity/getClient";
-import { InboxOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Form, Input, Menu, message } from "antd";
+// import { sanityClient } from "../lib/sanity/getClient";
+// import { InboxOutlined } from '@ant-design/icons';
 import axios from "axios";
 
 const { TextArea } = Input;
@@ -25,7 +25,7 @@ function Home() {
 
   const [loading, setLoading] = useState(false);
   const [geometry, setGeometry] = useState({ lng: '', lat: '' });
-  const [namaLokasi, setNamaLokasi] = useState('');
+  // const [namaLokasi, setNamaLokasi] = useState('');
   const [imageUrl, setImageUrl] = useState('');
 
   const handleFileChange = async (e) => {
@@ -102,30 +102,77 @@ function Home() {
   };
 
   const [alamat, setAlamat] = useState('');
+  const [kordinat, setKordinat] = useState('');
 
-  const fetchGeocode = async () => {
-    try {
-      const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(alamat)}`);
-      if (response.data.length > 0) {
-        const { lat, lon, display_name } = response.data[0];
-        setGeometry({ lat, lng: lon });
-        setNamaLokasi(display_name);
-        message.success('Lokasi ditemukan');
-      } else {
-        setGeometry({ lat: '', lng: '' });
-        setNamaLokasi('');
-        message.error('Alamat tidak ditemukan');
-      }
-    } catch (error) {
-      console.error('Error geocoding:', error);
-      message.error('Gagal melakukan geocoding');
-      setGeometry({ lat: '', lng: '' });
-      setNamaLokasi('');
-    }
-  };
+  // const fetchGeocode = async () => {
+  //   try {
+  //     const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(alamat)}`);
+  //     if (response.data.length > 0) {
+  //       const { lat, lon, display_name } = response.data[0];
+  //       setGeometry({ lat, lng: lon });
+  //       setNamaLokasi(display_name);
+  //       message.success('Lokasi ditemukan');
+  //     } else {
+  //       setGeometry({ lat: '', lng: '' });
+  //       setNamaLokasi('');
+  //       message.error('Alamat tidak ditemukan');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error geocoding:', error);
+  //     message.error('Gagal melakukan geocoding');
+  //     setGeometry({ lat: '', lng: '' });
+  //     setNamaLokasi('');
+  //   }
+  // };
 
   const handleAlamatChange = (e) => {
     setAlamat(e.target.value);
+  };
+
+  const handleKordinatChange = (e) => {
+    setKordinat(e.target.value);
+  };
+
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+
+  const parseCoordinates = () => {
+    try {
+      // Coba mem-parsing input koordinat
+      let coordinates = kordinat.replace(/[()]/g, ''); // Hilangkan tanda kurung jika ada
+      coordinates = coordinates.split(',');
+
+      if (coordinates.length === 2) {
+        const lat = parseFloat(coordinates[0].trim());
+        const lng = parseFloat(coordinates[1].trim());
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return { lat, lng };
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Failed to parse coordinates:', error);
+      return null;
+    }
+  };
+
+  const onFinishX = (values) => {
+    const { coordinates } = values;
+
+    const parsedCoords = parseCoordinates(coordinates);
+
+    if (parsedCoords) {
+      setLatitude(parsedCoords.lat);
+      setLongitude(parsedCoords.lng);
+      
+      setGeometry({ lat: parsedCoords.lat, lng: parsedCoords.lng });
+      message.success(`Lokasi ditemukan`);
+    } else {
+      message.error('Invalid coordinates. Please enter coordinates in format "-8.665041, 116.194405" or "(-8.665041, 116.194405)".');
+      setGeometry({ lat: '', lng: '' });
+    }
   };
 
   const gradientStyle = {
@@ -136,6 +183,7 @@ function Home() {
 
   const menu = (
     <Menu>
+      <Menu.Item key="webgis"><a href="https://relawangis.netlify.app/" target="_blank">Lihat Web GIS</a></Menu.Item>
       <Menu.Item key="signout" onClick={deauthUser}>Logout</Menu.Item>
     </Menu>
   );
@@ -143,8 +191,8 @@ function Home() {
     <>
       <section id="hero" className="relative bg-[url(https://ik.imagekit.io/tvlk/blog/2021/03/Mandalika.jpg)] bg-cover bg-center bg-no-repeat">
         <div style={gradientStyle}></div>
-        <div className="absolute right-0 p-6">
-          <Dropdown overlay={menu} placement="bottomRight" arrow>
+        <div className="absolute right-0 p-6 cursor-pointer">
+          <Dropdown overlay={menu} placement="bottomRight" arrow trigger={['click']}>
             <div className="w-10 h-10 rounded-full bg-gray-300 flex justify-center items-center">
               <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="24" cy="12" r="8" fill="#333" stroke="#333" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M42 44C42 34.0589 33.9411 26 24 26C14.0589 26 6 34.0589 6 44" stroke="#333" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -204,12 +252,23 @@ function Home() {
             >
               <div className="flex gap-2">
                 <Input onChange={handleAlamatChange} value={alamat} />
-                <Button className="bg-green-600 text-white px-6" onClick={fetchGeocode}>Cari</Button>
+                {/* <Button className="bg-green-600 text-white px-6" onClick={fetchGeocode}>Cari</Button> */}
+              </div>
+            </Form.Item>
+
+            <Form.Item
+              label="Input Kordinat"
+              name="kordinat"
+              rules={[{ required: true, message: 'Titik kordinat harus diisi' }]}
+            >
+              <div className="flex gap-2">
+                <Input onChange={handleKordinatChange} value={kordinat} placeholder="-8.665041, 116.194405 atau (-8.665041, 116.194405)" />
+                <Button className="bg-green-600 text-white" onClick={onFinishX}>Tentukan Kordinat</Button>
               </div>
             </Form.Item>
             <div className="text-gray-400 text-xs -mt-4 mb-6">
-              {geometry.lat && geometry.lng && (
-                <p>{namaLokasi} ({geometry.lat}, {geometry.lng})</p>
+              {latitude && longitude && (
+                <p>({latitude}, {longitude})</p>
               )}
             </div>
 
@@ -230,12 +289,12 @@ function Home() {
             </Form.Item>
 
             <Form.Item
-        label="Foto"
-        name="foto"
-        rules={[{ required: true, message: 'Foto harus diunggah' }]}
-      >
-        <input type="file" accept="image/*" onChange={handleFileChange} />
-      </Form.Item>
+              label="Foto"
+              name="foto"
+              rules={[{ required: true, message: 'Foto harus diunggah' }]}
+            >
+              <input type="file" accept="image/*" onChange={handleFileChange} />
+            </Form.Item>
 
             <Form.Item
               label="Longitude"

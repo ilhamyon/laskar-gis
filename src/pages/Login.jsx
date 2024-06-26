@@ -3,6 +3,7 @@ import RandomBG from "../components/RandomBG"
 import { Link, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react";
 import { sanityClient } from "../lib/sanity/getClient";
+import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { v4 as uuidv4 } from "uuid";
 
 function Login() {
@@ -88,6 +89,7 @@ function Login() {
       message.error("Username atau password salah");
     }
   };
+
   return (
     <>
       <section>
@@ -106,13 +108,14 @@ function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
-              <Input
+              <Input.Password
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 size="large"
                 className="mb-8 border"
+                iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
               />
               {/* {error && <p className="text-red-500">{error}</p>} */}
               <Button
