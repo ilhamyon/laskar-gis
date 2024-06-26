@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const RandomBG = () => {
   const [imageSrc, setImageSrc] = useState("");
 
-  const imageList = ["https://ik.imagekit.io/tvlk/blog/2021/03/Mandalika.jpg", "https://ik.imagekit.io/tvlk/blog/2021/03/Mandalika.jpg"];
+  const imageList = ["https://berundang.com/wp-content/uploads/2024/06/postingan-instagram-tambahan-nama-scaled.jpg", "https://berundang.com/wp-content/uploads/2024/06/postingan-instagram-2-tambahan-nama-scaled.jpg"];
 
   useEffect(() => {
     const randomImage = imageList[Math.floor(Math.random() * imageList.length)];
@@ -17,7 +17,7 @@ const RandomBG = () => {
           <img
           src={imageSrc}
           alt="best bid & quick quote"
-          className="w-full lg:h-screen h-40 object-cover"
+          className="w-full lg:h-screen object-cover"
           />
       ) : null}
     </>

@@ -155,6 +155,9 @@ function Home() {
 
         <div className="relative mx-auto max-w-screen-xl px-4 py-32 sm:px-6 lg:flex lg:h-screen lg:items-center lg:px-8">
           <div className="max-w-xl text-center sm:text-left">
+            <div className="flex justify-center items-center mb-6">
+              <img width={200} src="https://berundang.com/wp-content/uploads/2024/06/logo-laskar-relawan.png" />
+            </div>
             <h1 className="text-3xl font-extrabold sm:text-5xl text-gray-800">
               Selamat datang di
               <strong className="block font-extrabold text-rose-700"> PORTAL GIS RELAWAN. </strong>
@@ -185,8 +188,8 @@ function Home() {
         </div>
       </section>
       
-      <section id="input-kunjungan" className="text-gray-600 py-10 px-36 mb-10">
-        <div className="px-60">
+      <section id="input-kunjungan" className="text-gray-600 py-10 lg:px-36 mb-10">
+        <div className="lg:px-60 px-4">
           <Form
             name="addDataForm"
             onFinish={onFinish}

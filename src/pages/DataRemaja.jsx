@@ -107,6 +107,11 @@ function Home() {
       foto: item.fotoEksternal || "-",
     }));
   }  
+
+  const updatedColumns = columns.map((col) => ({
+    ...col,
+    width: col.width || 150, // Anda dapat menyesuaikan lebar default kolom
+  }));
   return (
     <>
       <section id="hero" className="relative bg-[url(https://ik.imagekit.io/tvlk/blog/2021/03/Mandalika.jpg)] bg-cover bg-center bg-no-repeat">
@@ -143,8 +148,8 @@ function Home() {
         </div>
       </section>
 
-      <section id="list" className="text-gray-600 py-10 px-36">
-        <Table className='font-normal' columns={columns} dataSource={dataSource} loading={isLoading}/>
+      <section id="list" className="text-gray-600 py-10 lg:px-36">
+        <Table className='font-normal' columns={columns} dataSource={dataSource} loading={isLoading} scroll={{ x: 'max-content' }}/>
 
         {/* <div className="text-center mt-10">
           <a href="#hero" className="text-rose-700">Back to Top</a>
