@@ -1,10 +1,27 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deauthUser, isAuthenticated } from "../utils/auth";
-import { Button, Dropdown, Form, Input, Menu, message } from "antd";
+import { Button, Dropdown, Form, Input, Menu, Popover, message } from "antd";
 // import { sanityClient } from "../lib/sanity/getClient";
 // import { InboxOutlined } from '@ant-design/icons';
 import axios from "axios";
+
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import 'antd/dist/reset.css';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Memperbaiki ikon marker
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 const { TextArea } = Input;
 
@@ -102,78 +119,66 @@ function Home() {
   };
 
   const [alamat, setAlamat] = useState('');
-  const [kordinat, setKordinat] = useState('');
-
-  // const fetchGeocode = async () => {
-  //   try {
-  //     const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(alamat)}`);
-  //     if (response.data.length > 0) {
-  //       const { lat, lon, display_name } = response.data[0];
-  //       setGeometry({ lat, lng: lon });
-  //       setNamaLokasi(display_name);
-  //       message.success('Lokasi ditemukan');
-  //     } else {
-  //       setGeometry({ lat: '', lng: '' });
-  //       setNamaLokasi('');
-  //       message.error('Alamat tidak ditemukan');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error geocoding:', error);
-  //     message.error('Gagal melakukan geocoding');
-  //     setGeometry({ lat: '', lng: '' });
-  //     setNamaLokasi('');
-  //   }
-  // };
+  // const [kordinat, setKordinat] = useState('');
 
   const handleAlamatChange = (e) => {
     setAlamat(e.target.value);
   };
 
-  const handleKordinatChange = (e) => {
-    setKordinat(e.target.value);
-  };
+  // const handleKordinatChange = (e) => {
+  //   setKordinat(e.target.value);
+  // };
 
-  const [latitude, setLatitude] = useState(null);
-  const [longitude, setLongitude] = useState(null);
+  // const [latitude, setLatitude] = useState(null);
+  // const [longitude, setLongitude] = useState(null);
 
-  const parseCoordinates = () => {
-    try {
-      // Coba mem-parsing input koordinat
-      let coordinates = kordinat.replace(/[()]/g, ''); // Hilangkan tanda kurung jika ada
-      coordinates = coordinates.split(',');
+  // const parseCoordinates = () => {
+  //   try {
+  //     // Coba mem-parsing input koordinat
+  //     let coordinates = kordinat.replace(/[()]/g, ''); // Hilangkan tanda kurung jika ada
+  //     coordinates = coordinates.split(',');
 
-      if (coordinates.length === 2) {
-        const lat = parseFloat(coordinates[0].trim());
-        const lng = parseFloat(coordinates[1].trim());
+  //     if (coordinates.length === 2) {
+  //       const lat = parseFloat(coordinates[0].trim());
+  //       const lng = parseFloat(coordinates[1].trim());
 
-        if (!isNaN(lat) && !isNaN(lng)) {
-          return { lat, lng };
-        }
-      }
+  //       if (!isNaN(lat) && !isNaN(lng)) {
+  //         return { lat, lng };
+  //       }
+  //     }
 
-      return null;
-    } catch (error) {
-      console.error('Failed to parse coordinates:', error);
-      return null;
-    }
-  };
+  //     return null;
+  //   } catch (error) {
+  //     console.error('Failed to parse coordinates:', error);
+  //     return null;
+  //   }
+  // };
 
-  const onFinishX = (values) => {
-    const { coordinates } = values;
+  // const onFinishX = (values) => {
+  //   const { coordinates } = values;
 
-    const parsedCoords = parseCoordinates(coordinates);
+  //   const parsedCoords = parseCoordinates(coordinates);
 
-    if (parsedCoords) {
-      setLatitude(parsedCoords.lat);
-      setLongitude(parsedCoords.lng);
+  //   if (parsedCoords) {
+  //     setLatitude(parsedCoords.lat);
+  //     setLongitude(parsedCoords.lng);
       
-      setGeometry({ lat: parsedCoords.lat, lng: parsedCoords.lng });
-      message.success(`Lokasi ditemukan`);
-    } else {
-      message.error('Invalid coordinates. Please enter coordinates in format "-8.665041, 116.194405" or "(-8.665041, 116.194405)".');
-      setGeometry({ lat: '', lng: '' });
-    }
+  //     setGeometry({ lat: parsedCoords.lat, lng: parsedCoords.lng });
+  //     message.success(`Lokasi ditemukan`);
+  //   } else {
+  //     message.error('Invalid coordinates. Please enter coordinates in format "-8.665041, 116.194405" or "(-8.665041, 116.194405)".');
+  //     setGeometry({ lat: '', lng: '' });
+  //   }
+  // };
+
+  const [position, setPosition] = useState({ lat: -8.692290, lng: 116.183420 });
+
+  const handleSave = () => {
+    setGeometry({ lat: position.lat, lng: position.lng });
+    message.success(`Berhasil menyimpan titik lokasi`);
   };
+
+  console.log('cek geometry:', geometry)
 
   const gradientStyle = {
     background: 'linear-gradient(to right, rgba(255, 255, 255, 0.95), transparent)',
@@ -258,17 +263,42 @@ function Home() {
 
             <Form.Item
               label="Input Kordinat"
-              name="kordinat"
-              rules={[{ required: true, message: 'Titik kordinat harus diisi' }]}
+              name="position"
+              // rules={[{ required: true, message: 'Titik kordinat harus diisi' }]}
             >
-              <div className="flex gap-2">
+              {/* <div className="flex gap-2">
                 <Input onChange={handleKordinatChange} value={kordinat} placeholder="-8.665041, 116.194405 atau (-8.665041, 116.194405)" />
                 <Button className="bg-green-600 text-white" onClick={onFinishX}>Tentukan Kordinat</Button>
+              </div> */}
+              <div>
+                <MapContainer center={position} zoom={13} style={{ height: '60vh', width: '100%' }}>
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  <Marker
+                    position={position}
+                    draggable={true}
+                    eventHandlers={{
+                      dragend(event) {
+                        setPosition(event.target.getLatLng());
+                      },
+                    }}
+                  >
+                    <Popup>
+                      <div>
+                        <p>Latitude: {position.lat.toFixed(4)}</p>
+                        <p>Longitude: {position.lng.toFixed(4)}</p>
+                        <Button className="bg-green-600 text-white" onClick={handleSave}>Simpan Titik</Button>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
               </div>
             </Form.Item>
             <div className="text-gray-400 text-xs -mt-4 mb-6">
-              {latitude && longitude && (
-                <p>({latitude}, {longitude})</p>
+              {position.lat && position.lng && (
+                <p>({position.lat}, {position.lng})</p>
               )}
             </div>
 
@@ -315,7 +345,7 @@ function Home() {
             </Form.Item>
 
             <Form.Item>
-              <Button className="bg-rose-700 text-white" htmlType="submit" loading={loading}>
+              <Button className="bg-rose-700 text-white" htmlType="submit" loading={loading} disabled={!imageUrl || !geometry}>
                 Submit
               </Button>
             </Form.Item>
