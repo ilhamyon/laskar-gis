@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deauthUser, isAuthenticated } from "../utils/auth";
-import { Button, Dropdown, Form, Input, Menu, Popover, message } from "antd";
+import { Button, Dropdown, Form, Input, Menu, message } from "antd";
 // import { sanityClient } from "../lib/sanity/getClient";
 // import { InboxOutlined } from '@ant-design/icons';
 import axios from "axios";
 
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import 'antd/dist/reset.css';
@@ -24,6 +24,18 @@ L.Icon.Default.mergeOptions({
 });
 
 const { TextArea } = Input;
+
+
+// eslint-disable-next-line react/prop-types
+const UpdateMapCenter = ({ position }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    map.flyTo(position, map.getZoom());
+  }, [position, map]);
+
+  return null;
+};
 
 function Home() {
   const navigate = useNavigate();
@@ -125,60 +137,30 @@ function Home() {
     setAlamat(e.target.value);
   };
 
-  // const handleKordinatChange = (e) => {
-  //   setKordinat(e.target.value);
-  // };
-
-  // const [latitude, setLatitude] = useState(null);
-  // const [longitude, setLongitude] = useState(null);
-
-  // const parseCoordinates = () => {
-  //   try {
-  //     // Coba mem-parsing input koordinat
-  //     let coordinates = kordinat.replace(/[()]/g, ''); // Hilangkan tanda kurung jika ada
-  //     coordinates = coordinates.split(',');
-
-  //     if (coordinates.length === 2) {
-  //       const lat = parseFloat(coordinates[0].trim());
-  //       const lng = parseFloat(coordinates[1].trim());
-
-  //       if (!isNaN(lat) && !isNaN(lng)) {
-  //         return { lat, lng };
-  //       }
-  //     }
-
-  //     return null;
-  //   } catch (error) {
-  //     console.error('Failed to parse coordinates:', error);
-  //     return null;
-  //   }
-  // };
-
-  // const onFinishX = (values) => {
-  //   const { coordinates } = values;
-
-  //   const parsedCoords = parseCoordinates(coordinates);
-
-  //   if (parsedCoords) {
-  //     setLatitude(parsedCoords.lat);
-  //     setLongitude(parsedCoords.lng);
-      
-  //     setGeometry({ lat: parsedCoords.lat, lng: parsedCoords.lng });
-  //     message.success(`Lokasi ditemukan`);
-  //   } else {
-  //     message.error('Invalid coordinates. Please enter coordinates in format "-8.665041, 116.194405" or "(-8.665041, 116.194405)".');
-  //     setGeometry({ lat: '', lng: '' });
-  //   }
-  // };
-
   const [position, setPosition] = useState({ lat: -8.692290, lng: 116.183420 });
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setPosition({ lat: latitude, lng: longitude });
+          message.success('Berhasil menyimpan titik lokasi');
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+        }
+      );
+    } else {
+      alert('Geolocation is not supported by this browser.');
+    }
+  };
 
   const handleSave = () => {
     setGeometry({ lat: position.lat, lng: position.lng });
     message.success(`Berhasil menyimpan titik lokasi`);
   };
 
-  console.log('cek geometry:', geometry)
+  console.log('cek geometry:', position)
 
   const gradientStyle = {
     background: 'linear-gradient(to right, rgba(255, 255, 255, 0.95), transparent)',
@@ -269,16 +251,15 @@ function Home() {
             </Form.Item>
 
             <Form.Item
-              label="Input Kordinat"
+              label="Input Kordinat (Klik Gunakan Lokasi Saat Ini atau Anda Juga Bisa Menentukan Titik Sendiri di Map)"
               name="position"
-              // rules={[{ required: true, message: 'Titik kordinat harus diisi' }]}
             >
-              {/* <div className="flex gap-2">
-                <Input onChange={handleKordinatChange} value={kordinat} placeholder="-8.665041, 116.194405 atau (-8.665041, 116.194405)" />
-                <Button className="bg-green-600 text-white" onClick={onFinishX}>Tentukan Kordinat</Button>
-              </div> */}
+              <div className="mb-4">
+                <Button className="bg-green-600 text-white" onClick={handleUseCurrentLocation}>Gunakan Lokasi Saat Ini</Button>
+              </div>
               <div>
                 <MapContainer center={position} zoom={13} style={{ height: '60vh', width: '100%' }}>
+                  <UpdateMapCenter position={position} />
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
