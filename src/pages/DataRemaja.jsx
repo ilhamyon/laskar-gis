@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deauthUser, isAuthenticated } from "../utils/auth";
-import { Dropdown, Menu, Table, message } from "antd";
+import { Button, Dropdown, Menu, Table, message } from "antd";
 import { sanityClient } from "../lib/sanity/getClient";
+import * as XLSX from 'xlsx';
 
 const columns = [
   {
@@ -106,7 +107,32 @@ function Home() {
       keteranganKunjungan: item.keteranganKunjungan || "-",
       foto: item.fotoEksternal || "-",
     }));
-  }  
+  }
+
+  const rearrangeDataForExcel = () => {
+    // Rearrange the data based on the column order
+    const rearrangedData = dataSource.map((item, index) => {
+      return {
+        'No.': index + 1,
+        'Nama Relawan': item.name,
+        'Alamat Tujuan': item.alamatTujuan,
+        'Nama yang Dikunjungi': item.namaYangDikunjungi,
+        'Keterangan Kunjungan': item.keteranganKunjungan,
+        'Foto': item.foto
+      };
+    });
+  
+    return rearrangedData;
+  };  
+
+  const downloadExcel = () => {
+    const data = rearrangeDataForExcel(serverData.data);
+    const volunteerName = data[0]?.['Nama Relawan'];
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    XLSX.writeFile(workbook, `Data-Kunjungan-Relawan-${volunteerName}.xlsx`);
+  };
 
   const updatedColumns = columns.map((col) => ({
     ...col,
@@ -149,6 +175,9 @@ function Home() {
       </section>
 
       <section id="list" className="text-gray-600 py-10 lg:px-36">
+        <div className="flex justify-end mb-4 mr-2">
+            <Button className="bg-green-600 text-white" onClick={downloadExcel}>Download Excel</Button>
+        </div>
         <Table className='font-normal' columns={columns} dataSource={dataSource} loading={isLoading} scroll={{ x: 'max-content' }}/>
 
         {/* <div className="text-center mt-10">
